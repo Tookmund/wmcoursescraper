@@ -118,16 +118,6 @@ def getreqs(term, crn):
     return (prereq, coreq, restrict, place)
 
 for term in terms:
-    # term = terms[2]
-    # finals = {}
-    # finals[term] = None
-    # finalreq = session.get("https://www.wm.edu/offices/registrar/calendarsandexams/examschedules/fall19exam/index.php")
-    # if finalreq.status_code == 200:
-    #     finals[term] = {}
-    #     finalp = bs4.BeautifulSoup(finalreq.text, 'lxml')
-    #     t = finalp.find(id='class').find_next('table')
-    #     for r in t.find_all('tr'):
-
     os.rename(term+'.db', term+'.db.bak')
     db = sqlite3.connect(term+'.db')
     c = db.cursor()
