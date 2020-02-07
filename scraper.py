@@ -49,7 +49,7 @@ for opt in subjc.children:
             subjs.append(opt['value'])
 
 coll = re.compile(r'C\d{2}.')
-def parserow(row, c):
+def parserow(row, c, termtable):
     course = ["" for i in range(17)]
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
@@ -82,7 +82,7 @@ def parserow(row, c):
     course[13], course[14], course[15], course[16]  = getreqs(term, course[0])
     v = " ?,"*len(course)
     v = v[:-1]
-    sql = "INSERT INTO courses VALUES ("+v+")"
+    sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
     c.execute(sql, course)
 
 def getreqs(term, crn):
@@ -118,13 +118,16 @@ def getreqs(term, crn):
     print(place)
     return (prereq, coreq, restrict, place)
 
+dbname = "courses.db"
+if os.path.exists(dbname):
+    os.rename(dbname, dbname+'.bak')
+db = sqlite3.connect(dbname)
+c = db.cursor()
+
 for term in terms:
-    if os.path.exists(term+'.db'):
-        os.rename(term+'.db', term+'.db.bak')
-    db = sqlite3.connect(term+'.db')
-    c = db.cursor()
+    termtable = "Term"+term
     c.execute('''
-            CREATE TABLE courses
+            CREATE TABLE {}
             (
             CRN int,
             Subject text,
@@ -144,7 +147,7 @@ for term in terms:
             Restrictions text,
             Place text
             )
-            ''')
+            '''.format(termtable))
 
     for subj in subjs:
         r = session.get("https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code="+term+"&term_subj="+subj+"&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search")
@@ -158,7 +161,7 @@ for term in terms:
         i = 0
         for data in t.find_all('td'):
             if i == rowsize:
-                parserow(row, c)
+                parserow(row, c, termtable)
                 row = []
                 i = 0
                 pass
