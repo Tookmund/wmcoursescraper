@@ -118,7 +118,8 @@ def getreqs(term, crn):
     return (prereq, coreq, restrict, place)
 
 for term in terms:
-    os.rename(term+'.db', term+'.db.bak')
+    if os.path.exists(term+'.db'):
+        os.rename(term+'.db', term+'.db.bak')
     db = sqlite3.connect(term+'.db')
     c = db.cursor()
     c.execute('''
