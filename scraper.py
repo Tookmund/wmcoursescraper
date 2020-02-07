@@ -29,10 +29,11 @@ def selectvalues(select):
 tc = csp.find(id='term_code')
 termdict = {}
 termdict['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+termdict['terms'] = {}
 terms = []
 for opt in tc.children:
     if isinstance(opt, bs4.element.Tag):
-        termdict[opt['value']] = opt.string.strip()
+        termdict['terms'][opt['value']] = opt.string.strip()
         terms.append(opt['value'])
 with open("terms.json", 'w') as f:
     json.dump(termdict, f)
