@@ -38,36 +38,37 @@ def selectvalues(select):
     return vals
 
 def parserow(row, subjs):
-    course = ["" for i in range(17)]
+    course = ["" for i in range(18)]
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
     course[1] = subjs[ident[0]]
-    course[2] = row[1]
+    course[2] = ident[0]+" "+ident[1]
+    course[3] = ident[2]
     attr = row[2].string.split(',')
-    course[3] = row[2].string
-    course[4] = row[3].string.strip()
-    course[4] = extraspace.sub(' ', course[4])
-    print(course[4])
-    course[5] = row[4].string.strip()
-    course[6] = row[5].string
+    course[4] = row[2].string
+    course[5] = row[3].string.strip()
+    course[5] = extraspace.sub(' ', course[4])
+    print(course[5])
+    course[6] = row[4].string.strip()
+    course[7] = row[5].string
     dt = row[6].string.split(":")
     if len(dt) == 2:
-        course[7] = dt[0]
+        course[8] = dt[0]
         se = dt[1].split('-')
-        course[8] = se[0]
-        course[9] = se[1]
+        course[9] = se[0]
+        course[10] = se[1]
     # row[7] is projected
-    course[10] = row[8].string
-    course[11] = row[9].string
-    if course[11].endswith('*'):
-        course[11] = course[11][:-1]
+    course[11] = row[8].string
+    course[12] = row[9].string
+    if course[12].endswith('*'):
+        course[12] = course[12][:-1]
     if row[10].string == "OPEN":
-        course[12] = 1
+        course[13] = 1
     else:
-        course[12] = 0
+        course[13] = 0
 
-    course[13], course[14], course[15], course[16]  = getreqs(term, course[0])
+    course[14], course[15], course[16], course[17]  = getreqs(term, course[0])
     return course
 
 @sleep_and_retry
@@ -149,6 +150,7 @@ if __name__ == "__main__":
                 CRN int,
                 Subject text,
                 ID  text,
+                Section text,
                 Attributes text,
                 Title text,
                 Instructor text,
