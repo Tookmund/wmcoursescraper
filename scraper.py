@@ -67,9 +67,7 @@ def parserow(row, subjs):
         course[12] = 0
 
     course[13], course[14], course[15], course[16]  = getreqs(term, course[0])
-    v = " ?,"*len(course)
-    v = v[:-1]
-    return v
+    return course
 
 def getreqs(term, crn):
     reqs = session.get(reqsurl.format(term, crn))
@@ -177,7 +175,9 @@ if __name__ == "__main__":
             i = 0
             for data in t.find_all('td'):
                 if i == rowsize:
-                    v = parserow(row, subjs)
+                    course = parserow(row, subjs)
+                    v = "?,"*len(course)
+                    v = v[:-1]
                     sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
                     c.execute(sql, course)
                     row = []
