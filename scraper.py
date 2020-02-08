@@ -168,4 +168,4 @@ for term in terms:
             row.append(data)
             i += 1
     db.commit()
-    db.close()
+db.close()
