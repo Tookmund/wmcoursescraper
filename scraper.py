@@ -9,6 +9,18 @@ from datetime import datetime
 import requests
 import bs4
 
+# Find COLL requirements
+coll = re.compile(r'C\d{2}.')
+
+# Remove extra whitespace
+extraspace = re.compile(r"\s+")
+
+# Clean up restrictions
+cleanrestrict = re.compile(r"(:|,)(\S)")
+
+# Clean up Place
+cleanplace = re.compile(r"--|:")
+
 def selectvalues(select):
     vals = []
     for opt in select.children:
@@ -18,7 +30,6 @@ def selectvalues(select):
                 vals.append(opt['value'])
     return vals
 
-coll = re.compile(r'C\d{2}.')
 def parserow(row, c, termtable, subjdict):
     course = ["" for i in range(17)]
     course[0] = row[0].a.string
@@ -29,7 +40,7 @@ def parserow(row, c, termtable, subjdict):
     attr = row[2].string.split(',')
     course[3] = row[2].string
     course[4] = row[3].string.strip()
-    course[4] = re.sub(r'\s+', ' ', course[4])
+    course[4] = extraspace.sub(' ', course[4])
     print(course[4])
     course[5] = row[4].string.strip()
     course[6] = row[5].string
@@ -65,18 +76,18 @@ def getreqs(term, crn):
     if (len(tr) < 4):
         return ('', '', '', '')
     prereq = tr[3].td.string.strip()
-    prereq = re.sub(r"\s+", " ", prereq)
+    prereq = extraspace.sub(" ", prereq)
     print(prereq)
     if (len(tr) < 6):
         return (prereq, '', '', '')
     coreq = tr[5].td.string.strip()
-    coreq = re.sub(r"\s+", " ", coreq)
+    coreq = extraspace.sub(" ", coreq)
     print(coreq)
     if (len(tr) < 8):
         return (prereq, coreq, '', '')
     restrict = next(tr[7].strings).strip()
-    restrict = re.sub(r"(:|,)(\S)", r"\1 \2", restrict)
-    restrict = re.sub(r"\s+", " ", restrict)
+    restrict = cleanrestrict.sub(r"\1 \2", restrict)
+    restrict = extraspace.sub(" ", restrict)
     print(restrict)
     if (len(tr) < 13):
         return (prereq, coreq, restrict, '')
@@ -84,7 +95,7 @@ def getreqs(term, crn):
     next(placegen)
     next(placegen)
     place = next(placegen).strip()
-    place = re.sub("--|:", " ", place)
+    place = cleanplace.sub(" ", place)
     print(place)
     return (prereq, coreq, restrict, place)
 
