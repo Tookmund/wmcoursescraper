@@ -2,13 +2,12 @@
 import sys
 import os
 import re
-import bs4
-import requests
 import sqlite3
 import json
 from datetime import datetime
 
-
+import requests
+import bs4
 
 def selectvalues(select):
     vals = []
@@ -18,7 +17,6 @@ def selectvalues(select):
             if v != '0':
                 vals.append(opt['value'])
     return vals
-
 
 coll = re.compile(r'C\d{2}.')
 def parserow(row, c, termtable, subjdict):
