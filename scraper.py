@@ -9,6 +9,12 @@ from datetime import datetime
 import requests
 import bs4
 
+csurl = "https://courselist.wm.edu/courselist/"
+
+subjurl = "https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code={}&term_subj={}&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search"
+
+reqsurl = "https://courselist.wm.edu/courselist/courseinfo/addInfo?fterm={}&fcrn={}"
+
 # Find COLL requirements
 coll = re.compile(r'C\d{2}.')
 
@@ -67,7 +73,7 @@ def parserow(row, c, termtable, subjs):
     c.execute(sql, course)
 
 def getreqs(term, crn):
-    reqs = session.get("https://courselist.wm.edu/courselist/courseinfo/addInfo?fterm="+term+"&fcrn="+crn)
+    reqs = session.get(reqsurl.format(term, crn))
     if reqs.status_code != 200:
         print(reqs.status_code)
         sys.exit(reqs.status_code)
@@ -101,7 +107,7 @@ def getreqs(term, crn):
 
 if __name__ == "__main__":
     session = requests.Session()
-    cs = session.get("https://courselist.wm.edu/courselist/")
+    cs = session.get(csurl)
     if cs.status_code != 200:
         print("Course List", cs.status_code)
         sys.exit(1)
@@ -161,7 +167,7 @@ if __name__ == "__main__":
                 '''.format(termtable))
 
         for subj in subjs:
-            r = session.get("https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code="+term+"&term_subj="+subj+"&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search")
+            r = session.get(subjurl.format(term, subj))
             if r.status_code != 200:
                 print(term, subj, r.status_code)
                 sys.exit(2)
