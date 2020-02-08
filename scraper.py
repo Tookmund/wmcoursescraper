@@ -8,13 +8,6 @@ import sqlite3
 import json
 from datetime import datetime
 
-session = requests.Session()
-cs = session.get("https://courselist.wm.edu/courselist/")
-if cs.status_code != 200:
-    print("Course List", cs.status_code)
-    sys.exit(1)
-
-csp = bs4.BeautifulSoup(cs.text, 'lxml')
 
 
 def selectvalues(select):
@@ -26,30 +19,9 @@ def selectvalues(select):
                 vals.append(opt['value'])
     return vals
 
-tc = csp.find(id='term_code')
-termdict = {}
-termdict['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-termdict['terms'] = {}
-terms = []
-for opt in tc.children:
-    if isinstance(opt, bs4.element.Tag):
-        termdict['terms'][opt['value']] = opt.string.strip()
-        terms.append(opt['value'])
-with open("terms.json", 'w') as f:
-    json.dump(termdict, f)
-
-subjs = []
-subjc = csp.find(id='term_subj')
-subjdict = {}
-for opt in subjc.children:
-    if isinstance(opt, bs4.element.Tag):
-        v = opt['value']
-        if v != '0':
-            subjdict[opt['value']] = opt.string.strip()
-            subjs.append(opt['value'])
 
 coll = re.compile(r'C\d{2}.')
-def parserow(row, c, termtable):
+def parserow(row, c, termtable, subjdict):
     course = ["" for i in range(17)]
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
@@ -118,54 +90,88 @@ def getreqs(term, crn):
     print(place)
     return (prereq, coreq, restrict, place)
 
-dbname = "courses.db"
-if os.path.exists(dbname):
-    os.rename(dbname, dbname+'.bak')
-db = sqlite3.connect(dbname)
-c = db.cursor()
+if __name__ == "__main__":
+    session = requests.Session()
+    cs = session.get("https://courselist.wm.edu/courselist/")
+    if cs.status_code != 200:
+        print("Course List", cs.status_code)
+        sys.exit(1)
 
-for term in terms:
-    termtable = "Term"+term
-    c.execute('''
-            CREATE TABLE {}
-            (
-            CRN int,
-            Subject text,
-            ID  text,
-            Attributes text,
-            Title text,
-            Instructor text,
-            Credits int,
-            Days text,
-            Start int,
-            End int,
-            Enrolled int,
-            Seats int,
-            Status int,
-            Prerequisites text,
-            Corequisites text,
-            Restrictions text,
-            Place text
-            )
-            '''.format(termtable))
+    csp = bs4.BeautifulSoup(cs.text, 'lxml')
+    tc = csp.find(id='term_code')
 
-    for subj in subjs:
-        r = session.get("https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code="+term+"&term_subj="+subj+"&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search")
-        if r.status_code != 200:
-            print(term_code, subj, r.status_code)
-            sys.exit(2)
-        parse = bs4.BeautifulSoup(r.text, 'lxml')
-        t = parse.find('table')
-        rowsize = 11
-        row = []
-        i = 0
-        for data in t.find_all('td'):
-            if i == rowsize:
-                parserow(row, c, termtable)
-                row = []
-                i = 0
-                pass
-            row.append(data)
-            i += 1
-    db.commit()
-db.close()
+    # Setup new term JSON
+    termdict = {}
+    termdict['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    termdict['terms'] = {}
+    terms = []
+    for opt in tc.children:
+        if isinstance(opt, bs4.element.Tag):
+            termdict['terms'][opt['value']] = opt.string.strip()
+            terms.append(opt['value'])
+    with open("terms.json", 'w') as f:
+        json.dump(termdict, f)
+
+    # Get all subjects
+    subjs = []
+    subjc = csp.find(id='term_subj')
+    subjdict = {}
+    for opt in subjc.children:
+        if isinstance(opt, bs4.element.Tag):
+            v = opt['value']
+            if v != '0':
+                subjdict[opt['value']] = opt.string.strip()
+                subjs.append(opt['value'])
+    # Setup DB
+    dbname = "courses.db"
+    if os.path.exists(dbname):
+        os.rename(dbname, dbname+'.bak')
+    db = sqlite3.connect(dbname)
+    c = db.cursor()
+
+    # Create a table for every term
+    for term in terms:
+        termtable = "Term"+term
+        c.execute('''
+                CREATE TABLE {}
+                (
+                CRN int,
+                Subject text,
+                ID  text,
+                Attributes text,
+                Title text,
+                Instructor text,
+                Credits int,
+                Days text,
+                Start int,
+                End int,
+                Enrolled int,
+                Seats int,
+                Status int,
+                Prerequisites text,
+                Corequisites text,
+                Restrictions text,
+                Place text
+                )
+                '''.format(termtable))
+
+        for subj in subjs:
+            r = session.get("https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code="+term+"&term_subj="+subj+"&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search")
+            if r.status_code != 200:
+                print(term_code, subj, r.status_code)
+                sys.exit(2)
+            parse = bs4.BeautifulSoup(r.text, 'lxml')
+            t = parse.find('table')
+            rowsize = 11
+            row = []
+            i = 0
+            for data in t.find_all('td'):
+                if i == rowsize:
+                    parserow(row, c, termtable, subjdict)
+                    row = []
+                    i = 0
+                    pass
+                row.append(data)
+                i += 1
+        db.commit()
+    db.close()
