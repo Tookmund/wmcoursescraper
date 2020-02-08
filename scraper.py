@@ -36,7 +36,7 @@ def selectvalues(select):
                 vals.append(opt['value'])
     return vals
 
-def parserow(row, c, termtable, subjs):
+def parserow(row, subjs):
     course = ["" for i in range(17)]
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
@@ -69,8 +69,7 @@ def parserow(row, c, termtable, subjs):
     course[13], course[14], course[15], course[16]  = getreqs(term, course[0])
     v = " ?,"*len(course)
     v = v[:-1]
-    sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
-    c.execute(sql, course)
+    return v
 
 def getreqs(term, crn):
     reqs = session.get(reqsurl.format(term, crn))
@@ -178,7 +177,9 @@ if __name__ == "__main__":
             i = 0
             for data in t.find_all('td'):
                 if i == rowsize:
-                    parserow(row, c, termtable, subjs)
+                    v = parserow(row, subjs)
+                    sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
+                    c.execute(sql, course)
                     row = []
                     i = 0
                     pass
