@@ -88,18 +88,15 @@ def getreqs(term, crn):
         return reqs
     prereq = tr[3].td.string.strip()
     reqs[1] = extraspace.sub(" ", prereq)
-    print(prereq)
     if (len(tr) < 6):
         return reqs
     coreq = tr[5].td.string.strip()
     reqs[2] = extraspace.sub(" ", coreq)
-    print(coreq)
     if (len(tr) < 8):
         return reqs
     restrict = next(tr[7].strings).strip()
     restrict = cleanrestrict.sub(r"\1 \2", restrict)
     reqs[3] = extraspace.sub(" ", restrict)
-    print(restrict)
     if (len(tr) < 13):
         return reqs
     placegen = tr[12].strings
@@ -107,7 +104,6 @@ def getreqs(term, crn):
     next(placegen)
     place = next(placegen).strip()
     reqs[4] = cleanplace.sub(" ", place)
-    print(place)
     return reqs
 
 if __name__ == "__main__":
