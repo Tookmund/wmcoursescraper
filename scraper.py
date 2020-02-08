@@ -37,18 +37,19 @@ def selectvalues(select):
                 vals.append(opt['value'])
     return vals
 
-def parserow(row, subjs):
+def parserow(row):
     course = ["" for i in range(18)]
     course[0] = row[0].a.string
+    print(course[0])
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
-    course[1] = subjs[ident[0]]
-    course[2] = ident[0]+" "+ident[1]
+    course[1] = ident[0]
+    course[2] = ident[1]
     course[3] = ident[2]
     attr = row[2].string.split(',')
     course[4] = row[2].string
     course[5] = row[3].string.strip()
-    course[5] = extraspace.sub(' ', course[4])
+    course[5] = extraspace.sub(' ', course[5])
     print(course[5])
     course[6] = row[4].string.strip()
     course[7] = row[5].string
@@ -141,9 +142,11 @@ if __name__ == "__main__":
     db = sqlite3.connect(dbname)
     c = db.cursor()
 
+    c.execute("CREATE TABLE subjects (Short text, Full text)")
+
     # Create a table for every term
     for term in terms['terms']:
-        termtable = "Term"+term
+        termtable = "term"+term
         c.execute('''
                 CREATE TABLE {}
                 (
@@ -169,6 +172,7 @@ if __name__ == "__main__":
                 '''.format(termtable))
 
         for subj in subjs:
+            c.execute("INSERT INTO subjects VALUES (?, ?)", (subj, subjs[subj]))
             r = session.get(subjurl.format(term, subj))
             if r.status_code != 200:
                 print(term, subj, r.status_code)
@@ -180,7 +184,7 @@ if __name__ == "__main__":
             i = 0
             for data in t.find_all('td'):
                 if i == rowsize:
-                    course = parserow(row, subjs)
+                    course = parserow(row)
                     v = "?,"*len(course)
                     v = v[:-1]
                     sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
