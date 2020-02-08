@@ -8,6 +8,7 @@ from datetime import datetime
 
 import requests
 import bs4
+from ratelimit import sleep_and_retry, limits
 
 csurl = "https://courselist.wm.edu/courselist/"
 
@@ -69,6 +70,8 @@ def parserow(row, subjs):
     course[13], course[14], course[15], course[16]  = getreqs(term, course[0])
     return course
 
+@sleep_and_retry
+@limits(calls=120, period=30)
 def getreqs(term, crn):
     reqs = session.get(reqsurl.format(term, crn))
     if reqs.status_code != 200:
