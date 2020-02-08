@@ -40,7 +40,6 @@ def selectvalues(select):
 def parserow(row):
     course = ["" for i in range(19)]
     course[0] = row[0].a.string
-    print(course[0])
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
     course[1] = ident[0]
@@ -50,7 +49,6 @@ def parserow(row):
     course[4] = row[2].string
     course[5] = row[3].string.strip()
     course[5] = extraspace.sub(' ', course[5])
-    print(course[5])
     course[6] = row[4].string.strip()
     course[7] = row[5].string
     dt = row[6].string.split(":")
@@ -70,6 +68,7 @@ def parserow(row):
         course[13] = 0
 
     course[14], course[15], course[16], course[17], course[18]  = getreqs(term, course[0])
+    print(course[0], course[5])
     return course
 
 @sleep_and_retry
