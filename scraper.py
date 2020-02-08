@@ -30,12 +30,12 @@ def selectvalues(select):
                 vals.append(opt['value'])
     return vals
 
-def parserow(row, c, termtable, subjdict):
+def parserow(row, c, termtable, subjs):
     course = ["" for i in range(17)]
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
-    course[1] = subjdict[ident[0]]
+    course[1] = subjs[ident[0]]
     course[2] = row[1]
     attr = row[2].string.split(',')
     course[3] = row[2].string
@@ -110,27 +110,23 @@ if __name__ == "__main__":
     tc = csp.find(id='term_code')
 
     # Setup new term JSON
-    termdict = {}
-    termdict['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    termdict['terms'] = {}
-    terms = []
+    terms = {}
+    terms['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    terms['terms'] = {}
     for opt in tc.children:
         if isinstance(opt, bs4.element.Tag):
-            termdict['terms'][opt['value']] = opt.string.strip()
-            terms.append(opt['value'])
+            terms['terms'][opt['value']] = opt.string.strip()
     with open("terms.json", 'w') as f:
-        json.dump(termdict, f)
+        json.dump(terms, f)
 
     # Get all subjects
-    subjs = []
     subjc = csp.find(id='term_subj')
-    subjdict = {}
+    subjs = {}
     for opt in subjc.children:
         if isinstance(opt, bs4.element.Tag):
             v = opt['value']
             if v != '0':
-                subjdict[opt['value']] = opt.string.strip()
-                subjs.append(opt['value'])
+                subjs[opt['value']] = opt.string.strip()
     # Setup DB
     dbname = "courses.db"
     if os.path.exists(dbname):
@@ -167,7 +163,7 @@ if __name__ == "__main__":
         for subj in subjs:
             r = session.get("https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code="+term+"&term_subj="+subj+"&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search")
             if r.status_code != 200:
-                print(term_code, subj, r.status_code)
+                print(term, subj, r.status_code)
                 sys.exit(2)
             parse = bs4.BeautifulSoup(r.text, 'lxml')
             t = parse.find('table')
@@ -176,7 +172,7 @@ if __name__ == "__main__":
             i = 0
             for data in t.find_all('td'):
                 if i == rowsize:
-                    parserow(row, c, termtable, subjdict)
+                    parserow(row, c, termtable, subjs)
                     row = []
                     i = 0
                     pass
