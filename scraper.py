@@ -140,7 +140,7 @@ if __name__ == "__main__":
     c = db.cursor()
 
     # Create a table for every term
-    for term in terms:
+    for term in terms['terms']:
         termtable = "Term"+term
         c.execute('''
                 CREATE TABLE {}
