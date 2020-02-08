@@ -38,7 +38,7 @@ def selectvalues(select):
     return vals
 
 def parserow(row):
-    course = ["" for i in range(18)]
+    course = ["" for i in range(19)]
     course[0] = row[0].a.string
     print(course[0])
     row[1] = row[1].string.strip()
@@ -69,43 +69,46 @@ def parserow(row):
     else:
         course[13] = 0
 
-    course[14], course[15], course[16], course[17]  = getreqs(term, course[0])
+    course[14], course[15], course[16], course[17], course[18]  = getreqs(term, course[0])
     return course
 
 @sleep_and_retry
 @limits(calls=120, period=30)
 def getreqs(term, crn):
-    reqs = session.get(reqsurl.format(term, crn))
-    if reqs.status_code != 200:
-        print(reqs.status_code)
-        sys.exit(reqs.status_code)
-    reqbs = bs4.BeautifulSoup(reqs.text, 'lxml')
+    r = session.get(reqsurl.format(term, crn))
+    if r.status_code != 200:
+        print(r.status_code)
+        sys.exit(r.status_code)
+    reqbs = bs4.BeautifulSoup(r.text, 'lxml')
     tr = reqbs.find_all('tr')
+    reqs = ['' for x in range(5)]
+    desc = tr[0].td.string.strip()
+    reqs[0] = desc.split("--")[2].strip()
     if (len(tr) < 4):
-        return ('', '', '', '')
+        return reqs
     prereq = tr[3].td.string.strip()
-    prereq = extraspace.sub(" ", prereq)
+    reqs[1] = extraspace.sub(" ", prereq)
     print(prereq)
     if (len(tr) < 6):
-        return (prereq, '', '', '')
+        return reqs
     coreq = tr[5].td.string.strip()
-    coreq = extraspace.sub(" ", coreq)
+    reqs[2] = extraspace.sub(" ", coreq)
     print(coreq)
     if (len(tr) < 8):
-        return (prereq, coreq, '', '')
+        return reqs
     restrict = next(tr[7].strings).strip()
     restrict = cleanrestrict.sub(r"\1 \2", restrict)
-    restrict = extraspace.sub(" ", restrict)
+    reqs[3] = extraspace.sub(" ", restrict)
     print(restrict)
     if (len(tr) < 13):
-        return (prereq, coreq, restrict, '')
+        return reqs
     placegen = tr[12].strings
     next(placegen)
     next(placegen)
     place = next(placegen).strip()
-    place = cleanplace.sub(" ", place)
+    reqs[4] = cleanplace.sub(" ", place)
     print(place)
-    return (prereq, coreq, restrict, place)
+    return reqs
 
 if __name__ == "__main__":
     session = requests.Session()
@@ -164,6 +167,7 @@ if __name__ == "__main__":
                 Enrolled int,
                 Seats int,
                 Status int,
+                Description text,
                 Prerequisites text,
                 Corequisites text,
                 Restrictions text,
