@@ -115,15 +115,11 @@ if __name__ == "__main__":
     csp = bs4.BeautifulSoup(cs.text, 'lxml')
     tc = csp.find(id='term_code')
 
-    # Setup new term JSON
+    # Get all Terms
     terms = {}
-    terms['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    terms['terms'] = {}
     for opt in tc.children:
         if isinstance(opt, bs4.element.Tag):
-            terms['terms'][opt['value']] = opt.string.strip()
-    with open("terms.json", 'w') as f:
-        json.dump(terms, f)
+            terms[opt['value']] = opt.string.strip()
 
     # Get all subjects
     subjc = csp.find(id='term_subj')
@@ -143,8 +139,8 @@ if __name__ == "__main__":
     c.execute("CREATE TABLE subjects (Short text, Full text)")
 
     # Create a table for every term
-    for term in terms['terms']:
-        termtable = "term"+term
+    for term in terms:
+        termtable = terms[term].replace(" ", "")
         c.execute('''
                 CREATE TABLE {}
                 (
