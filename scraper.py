@@ -37,6 +37,16 @@ def selectvalues(select):
                 vals.append(opt['value'])
     return vals
 
+_session = requests.Session()
+@sleep_and_retry
+@limits(calls=120, period=30)
+def geturl(url):
+    r = _session.get(url)
+    if r.status_code != 200:
+        print(url)
+        sys.exit(r.status_code)
+    return r.text
+
 def parserow(row):
     course = ["" for i in range(19)]
     course[0] = row[0].a.string
@@ -71,14 +81,9 @@ def parserow(row):
     print(course[0], course[5])
     return course
 
-@sleep_and_retry
-@limits(calls=120, period=30)
 def getreqs(term, crn):
-    r = session.get(reqsurl.format(term, crn))
-    if r.status_code != 200:
-        print(r.status_code)
-        sys.exit(r.status_code)
-    reqbs = bs4.BeautifulSoup(r.text, 'lxml')
+    r = geturl(reqsurl.format(term, crn))
+    reqbs = bs4.BeautifulSoup(r, 'lxml')
     tr = reqbs.find_all('tr')
     reqs = ['' for x in range(5)]
     desc = tr[0].td.string.strip()
@@ -106,13 +111,8 @@ def getreqs(term, crn):
     return reqs
 
 if __name__ == "__main__":
-    session = requests.Session()
-    cs = session.get(csurl)
-    if cs.status_code != 200:
-        print("Course List", cs.status_code)
-        sys.exit(1)
-
-    csp = bs4.BeautifulSoup(cs.text, 'lxml')
+    cs = geturl(csurl)
+    csp = bs4.BeautifulSoup(cs, 'lxml')
     tc = csp.find(id='term_code')
 
     # Get all Terms
@@ -168,11 +168,8 @@ if __name__ == "__main__":
 
         for subj in subjs:
             c.execute("INSERT INTO subjects VALUES (?, ?)", (subj, subjs[subj]))
-            r = session.get(subjurl.format(term, subj))
-            if r.status_code != 200:
-                print(term, subj, r.status_code)
-                sys.exit(2)
-            parse = bs4.BeautifulSoup(r.text, 'lxml')
+            r = geturl(subjurl.format(term, subj))
+            parse = bs4.BeautifulSoup(r, 'lxml')
             t = parse.find('table')
             rowsize = 11
             row = []
