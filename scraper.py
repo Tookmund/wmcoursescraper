@@ -48,7 +48,8 @@ def geturl(url):
     return r.text
 
 def parserow(row):
-    course = ["" for i in range(19)]
+    course = ["" for i in range(20)]
+    course[19] = 0
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
@@ -110,6 +111,8 @@ def getreqs(term, crn):
     reqs[4] = cleanplace.sub(" ", place)
     return reqs
 
+
+
 if __name__ == "__main__":
     cs = geturl(csurl)
     csp = bs4.BeautifulSoup(cs, 'lxml')
@@ -162,7 +165,8 @@ if __name__ == "__main__":
                 Prerequisites text,
                 Corequisites text,
                 Restrictions text,
-                Place text
+                Place text,
+                FinalID int
                 )
                 '''.format(termtable))
 
