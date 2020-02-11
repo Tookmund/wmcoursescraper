@@ -186,5 +186,5 @@ if __name__ == "__main__":
                     pass
                 row.append(data)
                 i += 1
-        db.commit()
+            db.commit()
     db.close()
