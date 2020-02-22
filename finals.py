@@ -84,9 +84,16 @@ if __name__ == "__main__":
             c.execute("INSERT INTO {} VALUES (?, ?, ?, ?)".format(finaltable),
                     (i, start, end, date))
             if len(tds) == 4:
-                starttimes = timeparse(tds[0].text)
-                course.execute("SELECT CRN FROM '{}' WHERE (Start BETWEEN ? AND ?) AND (Days == ?)".format(finaltable[:-5]),
-                        (start, end, days))
+                classtext = tds[0].text
+                if classtext.contains("-")
+                    classtimes = timeparse(classtext)
+                    course.execute("SELECT CRN FROM '{}' WHERE (Start BETWEEN ? AND ?) AND (Days == ?)".format(finaltable[:-5]),
+                            (classtimes[0], classtimes[1], days))
+                else:
+                    # "or later"
+                    start = timeparse(classtext.strip.split()[0])
+                    course.execute("SELECT CRN FROM '{}' WHERE (Start >= ?) AND (Days == ?)".format(finaltable[:-5]),
+                            (start[0], days))
             elif len(tds) == 3:
                 cid = tds[0].text.split()
                 if cid[0] == "Modern":
