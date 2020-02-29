@@ -57,6 +57,7 @@ if __name__ == "__main__":
             tag.get('class') == ['content_button']):
         schdreq = geturl(examurl+schda['href'])
         finaltable = schda.text.replace(" ", "")+"final"
+        selectstr = "SELECT CRN FROM '{}' WHERE ".format(finaltable[:-5])
         c.execute('''CREATE TABLE {}
             (
             id INTEGER PRIMARY KEY,
@@ -77,22 +78,28 @@ if __name__ == "__main__":
                 t = 1
                 d = 2
             times = timeparse(tds[t].text)
-            days = tds[1].text.strip()
             start = times[0]
             end = times[1]
             date = tds[d].text
             c.execute("INSERT INTO {} VALUES (?, ?, ?, ?)".format(finaltable),
                     (i, start, end, date))
             if len(tds) == 4:
+                days = tds[1].text.strip()
+                days = days.replace(" only", "")
+                days = days.replace(" or ", ",")
+                days = days.split(",")
+                daysselect = ""
+                for d in days:
+                    daysselect += "AND (Days == {}) ".format(d)
                 classtext = tds[0].text
                 if classtext.contains("-")
                     classtimes = timeparse(classtext)
-                    course.execute("SELECT CRN FROM '{}' WHERE (Start BETWEEN ? AND ?) AND (Days == ?)".format(finaltable[:-5]),
+                    course.execute(selectstr+"(Start BETWEEN ? AND ?) "+daysselect),
                             (classtimes[0], classtimes[1], days))
                 else:
                     # "or later"
                     start = timeparse(classtext.strip.split()[0])
-                    course.execute("SELECT CRN FROM '{}' WHERE (Start >= ?) AND (Days == ?)".format(finaltable[:-5]),
+                    course.execute(selectstr+"(Start >= ?) "+daysselect,
                             (start[0], days))
             elif len(tds) == 3:
                 cid = tds[0].text.split()
@@ -100,18 +107,18 @@ if __name__ == "__main__":
                     #IDK What to do with this
                     pass
                 elif cid[0] == "Classes":
-                        course.execute("SELECT CRN FROM '{}' WHERE (Days == '') AND (Start == '') AND (End == '')".format(finaltable[:-5]))
+                        course.execute(selectstr+"(Days == '') AND (Start == '') AND (End == '')")
                 if "," in cid[1]:
                     for e in cid[1:]:
-                        course.execute("SELECT CRN FROM '{}' WHERE (Subject == ?) AND (ID == ?)".format(finaltable[:-5]),
+                        course.execute(selectstr+"(Subject == ?) AND (ID == ?)",
                                 (cid[0], e[:-1]))
                 elif "/" in cid[1]:
                     s = cid[1].split("/")
                     for e in cid[1:]:
-                        course.execute("SELECT CRN FROM '{}' WHERE (Subject == ?) AND (ID == ?)".format(finaltable[:-5]),
+                        course.execute(selectstr+"(Subject == ?) AND (ID == ?)",
                                 (cid[0], e))
                 else:
-                    course.execute("SELECT CRN FROM '{}' WHERE (Subject == ?) AND (ID == ?)".format(finaltable[:-5]),
+                    course.execute(selectstr+"(Subject == ?) AND (ID == ?)",
                         (cid[0], cid[1]))
             for crn in course.fetchall():
                 course.execute("UPDATE {} SET FinalID = ? WHERE CRN == ?".format(finaltable[:-5]), (i, crn[0]))
