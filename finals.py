@@ -110,6 +110,9 @@ if __name__ == "__main__":
                         course.execute(selectstr+"(Days == '') AND (Start == '') AND (End == '')")
                 if "," in cid[1]:
                     for e in cid[1:]:
+                        # Handle repetition of subject id
+                        if e[:len(cid[0])] == cid[0]:
+                            e = e[len(cid[0]):]
                         course.execute(selectstr+"(Subject == ?) AND (ID == ?)",
                                 (cid[0], e[:-1]))
                 elif "/" in cid[1]:
