@@ -259,14 +259,12 @@ if __name__ == "__main__":
                 if "-" in classtext:
                     classtimes = timeparse(classtext)
                     selection = selectstr+"(Start BETWEEN ? AND ?) "+daysselect
-                    print(selection)
                     c.execute(selection, (classtimes[0], classtimes[1]))
                 else:
                     # "or later"
                     later = classtext.strip().split()
                     start = timeparse(later[0]+" "+later[1])
                     selection = selectstr+"(Start >= ?) "+daysselect
-                    print(selection)
                     c.execute(selection, (start[0],))
             elif len(tds) == 3:
                 cid = tds[0].text.split()
@@ -284,7 +282,6 @@ if __name__ == "__main__":
                     idwhere = idwhere[:-4]
                     idwhere += ")"
                     selection = selectstr+subjwhere+idwhere
-                    print(selection)
                     c.execute(selection)
                 elif cid[0] == "Classes":
                     c.execute(selectstr+"(Days == '') AND (Start == '') AND (End == '')")
@@ -297,7 +294,6 @@ if __name__ == "__main__":
                         selection += "(ID == '{}') OR".format(e[:-1])
                     selection = selection[:-3]
                     selection += ")"
-                    print(selection)
                     c.execute(selection)
                 elif "/" in cid[1]:
                     s = cid[1].split("/")
