@@ -291,8 +291,8 @@ if __name__ == "__main__":
                         # Handle repetition of subject id
                         if e[:len(cid[0])] == cid[0]:
                             e = e[len(cid[0]):]
-                        selection += "(ID == '{}') OR".format(e[:-1])
-                    selection = selection[:-3]
+                        selection += "(ID == '{}') OR ".format(e[:-1])
+                    selection = selection[:-4]
                     selection += ")"
                     c.execute(selection)
                 elif "/" in cid[1]:
