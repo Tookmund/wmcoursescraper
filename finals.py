@@ -13,6 +13,10 @@ from ratelimit import sleep_and_retry, limits
 
 examurl = "https://www.wm.edu/offices/registrar/calendarsandexams/examschedules/"
 
+# Assuming every class that satisfies the foreign language req is a "Modern Language"
+# This is probably wrong (Latin? Greek?)
+modlang = ["ARAB", "CHIN", "FREN", "GREK", "GRMN", "HBRW", "HISP", "ITAL", "JAPN", "LATN", "RUSN"]
+
 # Remove extra whitespace
 extraspace = re.compile(r"\s+")
 
@@ -88,33 +92,55 @@ if __name__ == "__main__":
                 days = days.replace(" only", "")
                 days = days.replace(" or ", ",")
                 days = days.split(",")
-                daysselect = ""
+                daysselect = "AND ("
                 for d in days:
-                    daysselect += "AND (Days == {}) ".format(d)
+                    daysselect += "(Days == '{}') OR ".format(d.strip())
+                daysselect = daysselect[:-4]
+                daysselect += ")"
                 classtext = tds[0].text
-                if classtext.contains("-")
+                if "-" in classtext:
                     classtimes = timeparse(classtext)
-                    course.execute(selectstr+"(Start BETWEEN ? AND ?) "+daysselect),
-                            (classtimes[0], classtimes[1], days))
+                    selection = selectstr+"(Start BETWEEN ? AND ?) "+daysselect
+                    print(selection)
+                    course.execute(selection, (classtimes[0], classtimes[1]))
                 else:
                     # "or later"
-                    start = timeparse(classtext.strip.split()[0])
-                    course.execute(selectstr+"(Start >= ?) "+daysselect,
-                            (start[0], days))
+                    later = classtext.strip().split()
+                    start = timeparse(later[0]+" "+later[1])
+                    selection = selectstr+"(Start >= ?) "+daysselect
+                    print(selection)
+                    course.execute(selection, (start[0],))
             elif len(tds) == 3:
                 cid = tds[0].text.split()
                 if cid[0] == "Modern":
-                    #IDK What to do with this
-                    pass
+                    subjwhere = "("
+                    for s in modlang:
+                        subjwhere += "(Subject == '{}') OR ".format(s)
+                    subjwhere = subjwhere[:-4]
+                    subjwhere += ")"
+                    idwhere = " AND ("
+                    for di in cid[2:]:
+                        if di[-1] == ",":
+                            di = di[:-1]
+                        idwhere += "(ID == {}) OR ".format(di)
+                    idwhere = idwhere[:-4]
+                    idwhere += ")"
+                    selection = selectstr+subjwhere+idwhere
+                    print(selection)
+                    course.execute(selection)
                 elif cid[0] == "Classes":
                         course.execute(selectstr+"(Days == '') AND (Start == '') AND (End == '')")
-                if "," in cid[1]:
+                elif "," in cid[1]:
+                    selection = selectstr+"(Subject == '{}') AND (".format(cid[0])
                     for e in cid[1:]:
                         # Handle repetition of subject id
                         if e[:len(cid[0])] == cid[0]:
                             e = e[len(cid[0]):]
-                        course.execute(selectstr+"(Subject == ?) AND (ID == ?)",
-                                (cid[0], e[:-1]))
+                        selection += "(ID == '{}') OR".format(e[:-1])
+                    selection = selection[:-3]
+                    selection += ")"
+                    print(selection)
+                    course.execute(selection)
                 elif "/" in cid[1]:
                     s = cid[1].split("/")
                     for e in cid[1:]:
