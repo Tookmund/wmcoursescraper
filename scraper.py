@@ -205,7 +205,7 @@ if __name__ == "__main__":
             for data in t.find_all('td'):
                 if i == rowsize:
                     course, date = parserow(row)
-                    if termdate is None:
+                    if termdate is None and isinstance(date, list) and len(date) == 2:
                         c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
                                 (term, date[0], date[1]))
                         termdate = date
