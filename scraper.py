@@ -98,15 +98,15 @@ def parserow(row):
     else:
         course[13] = 0
 
-    course[14], course[15], course[16], course[17], course[18]  = getreqs(term, course[0])
+    course[14], course[15], course[16], course[17], course[18], date = getreqs(term, course[0])
     print(course[0], course[5])
-    return course
+    return (course, date)
 
 def getreqs(term, crn):
     r = geturl(reqsurl.format(term, crn))
     reqbs = bs4.BeautifulSoup(r, 'lxml')
     tr = reqbs.find_all('tr')
-    reqs = ['' for x in range(5)]
+    reqs = ['' for x in range(6)]
     desc = tr[0].td.string.strip()
     reqs[0] = desc.split("--")[2].strip()
     if (len(tr) < 4):
@@ -129,6 +129,7 @@ def getreqs(term, crn):
     next(placegen)
     place = next(placegen).strip()
     reqs[4] = cleanplace.sub(" ", place)
+    reqs[5] = tr[9].td.string.strip().split(" - ")
     return reqs
 
 
@@ -160,9 +161,11 @@ if __name__ == "__main__":
     c = db.cursor()
 
     c.execute("CREATE TABLE subjects (Short text, Full text)")
+    c.execute("CREATE TABLE semesterdates (Semester text, Start text, End text)")
 
     # Create a table for every term
     for term in terms:
+        termdate = None
         termtable = terms[term].replace(" ", "")
         c.execute('''
                 CREATE TABLE {}
@@ -190,6 +193,7 @@ if __name__ == "__main__":
                 )
                 '''.format(termtable))
 
+
         for subj in subjs:
             c.execute("INSERT INTO subjects VALUES (?, ?)", (subj, subjs[subj]))
             r = geturl(subjurl.format(term, subj))
@@ -200,7 +204,11 @@ if __name__ == "__main__":
             i = 0
             for data in t.find_all('td'):
                 if i == rowsize:
-                    course = parserow(row)
+                    course, date = parserow(row)
+                    if termdate is None:
+                        c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
+                                (term, date[0], date[1]))
+                        termdate = date
                     v = "?,"*len(course)
                     v = v[:-1]
                     sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
