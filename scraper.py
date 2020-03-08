@@ -207,7 +207,7 @@ if __name__ == "__main__":
                     course, date = parserow(row)
                     if termdate is None and isinstance(date, list) and len(date) == 2:
                         c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
-                                (term, date[0], date[1]))
+                                (termtable, date[0], date[1]))
                         termdate = date
                     v = "?,"*len(course)
                     v = v[:-1]
