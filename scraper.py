@@ -70,7 +70,8 @@ def timeparse(times):
     return ret
 
 def parserow(row):
-    course = ["" for i in range(19)]
+    course = ["" for i in range(20)]
+    course[19] = 0
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
