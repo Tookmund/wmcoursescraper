@@ -18,6 +18,8 @@ reqsurl = "https://courselist.wm.edu/courselist/courseinfo/addInfo?fterm={}&fcrn
 
 examurl = "https://www.wm.edu/offices/registrar/calendarsandexams/examschedules/"
 
+calendarurl = "https://www.wm.edu/offices/registrar/calendarsandexams/ugcalendars/index.php"
+
 # Assuming every class that satisfies the foreign language req is a "Modern Language"
 # This is probably wrong (Latin? Greek?)
 modlang = ["ARAB", "CHIN", "FREN", "GREK", "GRMN", "HBRW", "HISP", "ITAL", "JAPN", "LATN", "RUSN"]
@@ -68,8 +70,7 @@ def timeparse(times):
     return ret
 
 def parserow(row):
-    course = ["" for i in range(20)]
-    course[19] = 0
+    course = ["" for i in range(19)]
     course[0] = row[0].a.string
     row[1] = row[1].string.strip()
     ident = row[1].split(" ")
@@ -98,15 +99,15 @@ def parserow(row):
     else:
         course[13] = 0
 
-    course[14], course[15], course[16], course[17], course[18], date = getreqs(term, course[0])
+    course[14], course[15], course[16], course[17], course[18] = getreqs(term, course[0])
     print(course[0], course[5])
-    return (course, date)
+    return course
 
 def getreqs(term, crn):
     r = geturl(reqsurl.format(term, crn))
     reqbs = bs4.BeautifulSoup(r, 'lxml')
     tr = reqbs.find_all('tr')
-    reqs = ['' for x in range(6)]
+    reqs = ['' for x in range(5)]
     desc = tr[0].td.string.strip()
     reqs[0] = desc.split("--")[2].strip()
     if (len(tr) < 4):
@@ -129,7 +130,6 @@ def getreqs(term, crn):
     next(placegen)
     place = next(placegen).strip()
     reqs[4] = cleanplace.sub(" ", place)
-    reqs[5] = tr[9].td.string.strip().split(" - ")
     return reqs
 
 
@@ -163,9 +163,40 @@ if __name__ == "__main__":
     c.execute("CREATE TABLE subjects (Short text, Full text)")
     c.execute("CREATE TABLE semesterdates (Semester text, Start text, End text)")
 
+    def findheaders(tag):
+        return tag.name == "h5" and tag.a.has_attr("id")
+
+    # Find dates of course start and end
+    tdr = geturl(calendarurl)
+    tdp = bs4.BeautifulSoup(tdr, 'lxml')
+    dateheaders = tdp.find_all(findheaders)
+    for term in terms:
+        for header in dateheaders:
+            if header.contents[1] == terms[term]:
+                # The first next_sibling is just a newline
+                table = header.next_sibling.next_sibling
+                startelem = table.find(text="First day of classes")
+                if startelem is None:
+                    continue
+                for p in startelem.parents:
+                    if p.name == "tr":
+                        start = p.td.string
+                        break
+                endelem = table.find(text="Last day of classes")
+                if endelem is None:
+                    continue
+                for p in endelem.parents:
+                    if p.name == "tr":
+                        end = p.td.string
+                        break
+                termtable = terms[term].replace(" ", "")
+                c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
+                        (termtable, start, end))
+
+    db.commit()
+    sys.exit(0)
     # Create a table for every term
     for term in terms:
-        termdate = None
         termtable = terms[term].replace(" ", "")
         c.execute('''
                 CREATE TABLE {}
@@ -204,11 +235,7 @@ if __name__ == "__main__":
             i = 0
             for data in t.find_all('td'):
                 if i == rowsize:
-                    course, date = parserow(row)
-                    if termdate is None and isinstance(date, list) and len(date) == 2:
-                        c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
-                                (termtable, date[0], date[1]))
-                        termdate = date
+                    course = parserow(row)
                     v = "?,"*len(course)
                     v = v[:-1]
                     sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
