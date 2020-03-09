@@ -193,8 +193,6 @@ if __name__ == "__main__":
                 c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
                         (termtable, start, end))
 
-    db.commit()
-    sys.exit(0)
     # Create a table for every term
     for term in terms:
         termtable = terms[term].replace(" ", "")
