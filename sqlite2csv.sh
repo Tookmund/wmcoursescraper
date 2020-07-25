@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-for t in $(sqlite3 "$1" "SELECT name FROM sqlite_master where type='table' and name != 'subjects' and name != 'semesterdates';")
+for t in $(sqlite3 "$1" "SELECT name FROM sqlite_master where type='table';")
 do
 
 sqlite3 "$1" << EOF
