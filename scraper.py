@@ -165,7 +165,7 @@ if __name__ == "__main__":
     c.execute("CREATE TABLE semesterdates (Semester text, Start text, End text)")
 
     def findheaders(tag):
-        return tag.name == "h5" and tag.a.has_attr("id")
+        return tag.name == "h5" and tag.has_attr("a") and tag.a.has_attr("id")
 
     # Find dates of course start and end
     tdr = geturl(calendarurl)
