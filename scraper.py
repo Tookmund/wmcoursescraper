@@ -164,13 +164,10 @@ if __name__ == "__main__":
     c.execute("CREATE TABLE subjects (Short text, Full text)")
     c.execute("CREATE TABLE semesterdates (Semester text, Start text, End text)")
 
-    def findheaders(tag):
-        return tag.name == "h5" and tag.has_attr("a") and tag.a.has_attr("id")
-
     # Find dates of course start and end
     tdr = geturl(calendarurl)
     tdp = bs4.BeautifulSoup(tdr, 'lxml')
-    dateheaders = tdp.find_all(findheaders)
+    dateheaders = tdp.find_all(lambda tag: tag.name == "h5" and tag.has_attr("a") and tag.a.has_attr("id"))
     for term in terms:
         for header in dateheaders:
             if header.contents[1] == terms[term]:
