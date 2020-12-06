@@ -162,7 +162,40 @@ if __name__ == "__main__":
     c = db.cursor()
 
     c.execute("CREATE TABLE subjects (Short text, Full text)")
-    c.execute("CREATE TABLE semesterdates (Semester text, Start text, End text)")
+    c.execute("CREATE TABLE semesters (ID int, Name text, Start text, End text)")
+    c.execute('''
+        CREATE TABLE courses
+        (
+        CRN int,
+        Semester int,
+        Subject text,
+        ID  text,
+        Section text,
+        Attributes text,
+        Title text,
+        Instructor text,
+        Credits int,
+        Days text,
+        Start int,
+        End int,
+        Enrolled int,
+        Seats int,
+        Status int,
+        Description text,
+        Prerequisites text,
+        Corequisites text,
+        Restrictions text,
+        Place text,
+        FinalID int
+	)
+	''')
+    c.execute('''CREATE TABLE finals
+        (
+        id INTEGER PRIMARY KEY,
+        start INTEGER,
+        end INTEGER,
+        date TEXT
+        )''')
 
     # Find dates of course start and end
     tdr = geturl(calendarurl)
@@ -196,39 +229,8 @@ if __name__ == "__main__":
                     if p.name == "tr":
                         end = p.td.string
                         break
-                termtable = terms[term].replace(" ", "")
-                c.execute("INSERT INTO semesterdates VALUES (?, ?, ?)",
-                        (termtable, start, end))
-
-    # Create a table for every term
-    for term in terms:
-        termtable = terms[term].replace(" ", "")
-        c.execute('''
-                CREATE TABLE {}
-                (
-                CRN int,
-                Subject text,
-                ID  text,
-                Section text,
-                Attributes text,
-                Title text,
-                Instructor text,
-                Credits int,
-                Days text,
-                Start int,
-                End int,
-                Enrolled int,
-                Seats int,
-                Status int,
-                Description text,
-                Prerequisites text,
-                Corequisites text,
-                Restrictions text,
-                Place text,
-                FinalID int
-                )
-                '''.format(termtable))
-
+                c.execute("INSERT INTO semesters VALUES (?,?,?,?)",
+                    (term, terms[term], start, end))
 
         for subj in subjs:
             c.execute("INSERT INTO subjects VALUES (?, ?)", (subj, subjs[subj]))
@@ -241,9 +243,10 @@ if __name__ == "__main__":
             for data in t.find_all('td'):
                 if i == rowsize:
                     course = parserow(row)
-                    v = "?,"*len(course)
+                    v = "?,{},".format(term)
+                    v += "?,"*(len(course)-1)
                     v = v[:-1]
-                    sql = "INSERT INTO {} VALUES ({})".format(termtable, v)
+                    sql = "INSERT INTO courses VALUES ({})".format(v)
                     c.execute(sql, course)
                     row = []
                     i = 0
@@ -255,19 +258,11 @@ if __name__ == "__main__":
     r = geturl(examurl)
     exambs = bs4.BeautifulSoup(r, 'lxml')
     # https://stackoverflow.com/questions/22726860/beautifulsoup-webscraping-find-all-finding-exact-match
+    i = 0
     for schda in exambs.find_all(lambda tag: tag.name == 'a' and
             tag.parent.get('class') == ['content_button']):
         schdreq = geturl(examurl+schda['href'])
-        finaltable = schda.text.replace(" ", "")+"final"
-        selectstr = "SELECT CRN FROM '{}' WHERE ".format(finaltable[:-5])
-        c.execute('''CREATE TABLE {}
-            (
-            id INTEGER PRIMARY KEY,
-            start INTEGER,
-            end INTEGER,
-            date TEXT
-            )'''.format(finaltable))
-        i = 0
+        selectstr = "SELECT CRN FROM courses WHERE "
         schdsp = bs4.BeautifulSoup(schdreq, 'lxml')
         byclass = schdsp.find_all("table")[1]
         for tr in byclass.find_all("tr")[1:]:
@@ -283,7 +278,7 @@ if __name__ == "__main__":
             start = times[0]
             end = times[1]
             date = tds[d].text
-            c.execute("INSERT INTO {} VALUES (?, ?, ?, ?)".format(finaltable),
+            c.execute("INSERT INTO finals VALUES (?, ?, ?, ?)",
                     (i, start, end, date))
             if len(tds) == 4:
                 days = tds[1].text.strip()
@@ -344,6 +339,6 @@ if __name__ == "__main__":
                     c.execute(selectstr+"(Subject == ?) AND (ID == ?)",
                         (cid[0], cid[1]))
             for crn in c.fetchall():
-                c.execute("UPDATE {} SET FinalID = ? WHERE CRN == ?".format(finaltable[:-5]), (i, crn[0]))
+                c.execute("UPDATE courses SET FinalID = ? WHERE CRN == ?", (i, crn[0]))
         db.commit()
     db.close()

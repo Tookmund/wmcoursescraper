@@ -1,13 +1,16 @@
 #!/bin/sh
-set -e
-for t in $(sqlite3 "$1" "SELECT name FROM sqlite_master where type='table';")
+set -eu
+
+for ID in $(sqlite3 "$1" "SELECT ID FROM semesters;")
 do
+
+NAME=$(sqlite3 "$1" "SELECT Name FROM semesters WHERE ID == $ID" | tr -d ' ')
 
 sqlite3 "$1" << EOF
 .headers on
 .mode csv
-.output $t.csv
-SELECT * FROM $t;
+.output "$NAME.csv"
+SELECT * FROM courses where Semester = $ID
 EOF
 
 done
