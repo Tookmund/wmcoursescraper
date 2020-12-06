@@ -16,4 +16,5 @@ tasks:
       python3 scraper.py
 
   - csv: |
+      cd wmcoursescraper
       ./sqlite2csv.sh courses.db
