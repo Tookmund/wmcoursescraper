@@ -16,4 +16,4 @@ tasks:
       python3 scraper.py
 
   - csv: |
-    ./sqlite2csv.sh courses.db
+      ./sqlite2csv.sh courses.db
