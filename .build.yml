@@ -3,6 +3,7 @@ packages:
   - python3
   - python3-pip
   - python3-setuptools
+  - sqlite3
 sources:
   - https://git.sr.ht/~tookmund/wmcoursescraper
 tasks:
@@ -10,6 +11,9 @@ tasks:
       cd wmcoursescraper
       pip3 install -q -r requirements.txt
 
-  - test: |
+  - scrape: |
       cd wmcoursescraper
       python3 scraper.py
+
+  - csv: |
+    ./sqlite2csv.sh courses.db
