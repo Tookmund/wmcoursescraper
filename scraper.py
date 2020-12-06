@@ -167,7 +167,16 @@ if __name__ == "__main__":
     # Find dates of course start and end
     tdr = geturl(calendarurl)
     tdp = bs4.BeautifulSoup(tdr, 'lxml')
-    dateheaders = tdp.find_all(lambda tag: tag.name == "h5" and tag.has_attr("a") and tag.a.has_attr("id"))
+
+    def finddateheaders(tag):
+        if tag.name in ["h5", "h6"]:
+            a = tag.find("a")
+            if a is not None and a.has_attr("id"):
+                if a['id'] == "fall" or a['id'] == "spring":
+                    return True
+        return False
+
+    dateheaders = tdp.find_all(finddateheaders)
     for term in terms:
         for header in dateheaders:
             if header.contents[1] == terms[term]:
@@ -243,11 +252,11 @@ if __name__ == "__main__":
                 i += 1
             db.commit()
     # Get final exam schedule
-    r = geturl(examurl+"index.php")
+    r = geturl(examurl)
     exambs = bs4.BeautifulSoup(r, 'lxml')
     # https://stackoverflow.com/questions/22726860/beautifulsoup-webscraping-find-all-finding-exact-match
     for schda in exambs.find_all(lambda tag: tag.name == 'a' and
-            tag.get('class') == ['content_button']):
+            tag.parent.get('class') == ['content_button']):
         schdreq = geturl(examurl+schda['href'])
         finaltable = schda.text.replace(" ", "")+"final"
         selectstr = "SELECT CRN FROM '{}' WHERE ".format(finaltable[:-5])
