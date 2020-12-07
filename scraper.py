@@ -186,7 +186,7 @@ if __name__ == "__main__":
         Corequisites text,
         Restrictions text,
         Place text,
-        FinalID int
+        Final int
 	)
 	''')
     c.execute('''CREATE TABLE finals
@@ -339,6 +339,6 @@ if __name__ == "__main__":
                     c.execute(selectstr+"(Subject == ?) AND (ID == ?)",
                         (cid[0], cid[1]))
             for crn in c.fetchall():
-                c.execute("UPDATE courses SET FinalID = ? WHERE CRN == ?", (i, crn[0]))
+                c.execute("UPDATE courses SET Final = ? WHERE CRN == ?", (i, crn[0]))
         db.commit()
     db.close()
