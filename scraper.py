@@ -213,22 +213,21 @@ if __name__ == "__main__":
     for term in terms:
         for header in dateheaders:
             if header.contents[1] == terms[term]:
-                # The first next_sibling is just a newline
-                table = header.next_sibling.next_sibling
+                table = header.findNextSibling("table")
                 startelem = table.find(text="First day of classes")
-                if startelem is None:
-                    continue
-                for p in startelem.parents:
-                    if p.name == "tr":
-                        start = p.td.string
-                        break
+                start = ""
+                if startelem is not None:
+                    for p in startelem.parents:
+                        if p.name == "tr":
+                            start = p.td.string
+                            break
                 endelem = table.find(text="Last day of classes")
-                if endelem is None:
-                    continue
-                for p in endelem.parents:
-                    if p.name == "tr":
-                        end = p.td.string
-                        break
+                end = ""
+                if endelem is not None:
+                    for p in endelem.parents:
+                        if p.name == "tr":
+                            end = p.td.string
+                            break
                 c.execute("INSERT INTO semesters VALUES (?,?,?,?)",
                     (term, terms[term], start, end))
 
