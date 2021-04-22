@@ -47,7 +47,7 @@ def selectvalues(select):
 
 _session = requests.Session()
 @sleep_and_retry
-@limits(calls=120, period=30)
+@limits(calls=30, period=30)
 def geturl(url):
     r = _session.get(url)
     if r.status_code != 200:
