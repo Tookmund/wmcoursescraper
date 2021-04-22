@@ -2,7 +2,7 @@
 set -e
 
 cd /home/scraper
-wmcoursescraper/scraper.py
+time wmcoursescraper/scraper.py
 cd /var/www/html
 find . -name '*.db' -mtime +29 -exec rm {} \;
 TODAY=$(date -I)
