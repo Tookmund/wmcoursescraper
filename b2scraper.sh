@@ -2,10 +2,10 @@
 set -e
 
 cd "$HOME/courses.db.d"
-../wmcoursescraper/scraper.py
+time ../wmcoursescraper/scraper.py
 TODAY=$(date -I)
 mv courses.db "$TODAY.db"
 find . -name '*.db' -mtime +29 -exec rm {} \;
 ln -sf "$TODAY.db" courses.db
 ../wmcoursescraper/sqlite2csv.sh "$TODAY.db"
-backblaze-b2 sync --delete . b2://wmcoursescraper
+time backblaze-b2 sync --noProgress --delete . b2://wmcoursescraper
