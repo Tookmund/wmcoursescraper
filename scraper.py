@@ -101,7 +101,8 @@ def parserow(row):
         course[13] = 0
 
     course[14], course[15], course[16], course[17], course[18] = getreqs(term, course[0])
-    print(course[0], course[5])
+    if sys.stdout.isatty():
+        print(course[0], course[5])
     return course
 
 def getreqs(term, crn):
@@ -232,6 +233,7 @@ if __name__ == "__main__":
                     (term, terms[term], start, end))
 
         for subj in subjs:
+            print(subj)
             c.execute("INSERT INTO subjects VALUES (?, ?)", (subj, subjs[subj]))
             r = geturl(subjurl.format(term, subj))
             parse = bs4.BeautifulSoup(r, 'lxml')
