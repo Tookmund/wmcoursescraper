@@ -10,7 +10,21 @@ sqlite3 "$1" << EOF
 .headers on
 .mode csv
 .output "$NAME.csv"
-SELECT * FROM courses where Semester = $ID
+SELECT * FROM courses WHERE Semester = $ID
 EOF
 
 done
+
+sqlite3 "$1" << EOF
+.headers on
+.mode csv
+.output "semesterdates.csv"
+SELECT * FROM semesters
+EOF
+
+sqlite3 "$1" << EOF
+.headers on
+.mode csv
+.output "subjects.csv"
+SELECT * FROM subjects
+EOF
