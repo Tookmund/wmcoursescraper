@@ -342,4 +342,9 @@ if __name__ == "__main__":
             for crn in c.fetchall():
                 c.execute("UPDATE courses SET Final = ? WHERE CRN == ?", (i, crn[0]))
         db.commit()
+    c.execute('''
+    CREATE TABLE timestamp (dt TEXT);
+    INSERT INTO timestamp VALUES (datetime('now'));
+    ''')
+    db.commit()
     db.close()
