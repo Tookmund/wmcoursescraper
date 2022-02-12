@@ -206,7 +206,7 @@ if __name__ == "__main__":
         if tag.name in ["h5", "h6"]:
             a = tag.find("a")
             if a is not None and a.has_attr("id"):
-                if a['id'] == "fall" or a['id'] == "spring":
+                if a['id'] in ("fall", "spring", "summer"):
                     return True
         return False
 
