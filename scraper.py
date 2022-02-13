@@ -197,6 +197,10 @@ if __name__ == "__main__":
         end INTEGER,
         date TEXT
         )''')
+    c.execute("CREATE TABLE runtime (start TEXT, end TEXT)")
+
+    # Start your engines!
+    c.execute("INSERT INTO runtime (start) VALUES (datetime('now'))")
 
     # Find dates of course start and end
     tdr = geturl(calendarurl)
@@ -342,9 +346,6 @@ if __name__ == "__main__":
             for crn in c.fetchall():
                 c.execute("UPDATE courses SET Final = ? WHERE CRN == ?", (i, crn[0]))
         db.commit()
-    c.execute('''
-    CREATE TABLE timestamp (dt TEXT);
-    INSERT INTO timestamp VALUES (datetime('now'));
-    ''')
+    c.execute("UPDATE runtime SET end = datetime('now')")
     db.commit()
     db.close()
