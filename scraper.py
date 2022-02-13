@@ -135,6 +135,9 @@ def getreqs(term, crn):
     return reqs
 
 
+# Datetime strings in ISO 8601 with timezone
+def currentutc():
+    return datetime.utcnow().isoformat()+"Z"
 
 if __name__ == "__main__":
     cs = geturl(csurl)
@@ -200,7 +203,7 @@ if __name__ == "__main__":
     c.execute("CREATE TABLE runtime (start TEXT, end TEXT)")
 
     # Start your engines!
-    c.execute("INSERT INTO runtime (start) VALUES (datetime('now'))")
+    c.execute("INSERT INTO runtime (start) VALUES (?)", (currentutc(),))
 
     # Find dates of course start and end
     tdr = geturl(calendarurl)
@@ -346,6 +349,6 @@ if __name__ == "__main__":
             for crn in c.fetchall():
                 c.execute("UPDATE courses SET Final = ? WHERE CRN == ?", (i, crn[0]))
         db.commit()
-    c.execute("UPDATE runtime SET end = datetime('now')")
+    c.execute("UPDATE runtime SET end = ?", (currentutc(),))
     db.commit()
     db.close()
