@@ -7,6 +7,8 @@ import json
 from datetime import datetime
 
 import requests
+
+from requests.adapters import HTTPAdapter, Retry
 import bs4
 from ratelimit import sleep_and_retry, limits
 
@@ -46,6 +48,11 @@ def selectvalues(select):
     return vals
 
 _session = requests.Session()
+
+_retries = Retry(total=30, backoff_factor=60)
+_session.mount("https://", HTTPAdapter(max_retries=_retries))
+
+
 @sleep_and_retry
 @limits(calls=30, period=30)
 def geturl(url):
