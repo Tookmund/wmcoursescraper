@@ -5,12 +5,15 @@ import re
 import sqlite3
 import json
 from datetime import datetime
+import logging
 
 import requests
 
 from requests.adapters import HTTPAdapter, Retry
 import bs4
 from ratelimit import sleep_and_retry, limits
+
+logging.basicConfig(level=logging.DEBUG)
 
 csurl = "https://courselist.wm.edu/courselist/"
 
