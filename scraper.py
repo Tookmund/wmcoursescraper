@@ -51,6 +51,8 @@ def selectvalues(select):
     return vals
 
 _session = requests.Session()
+_session.headers.update({"User-Agent": "wmcoursescraper/1.0 wmcoursescraper@tookmund.com"})
+
 
 _retries = Retry(total=30, backoff_factor=60)
 _session.mount("https://", HTTPAdapter(max_retries=_retries))
