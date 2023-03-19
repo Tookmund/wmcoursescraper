@@ -58,7 +58,7 @@ _session.mount("https://", HTTPAdapter(max_retries=_retries))
 def geturl(url):
     r = _session.get(url)
     if r.status_code != 200:
-        print(url)
+        print(r.status_code, url)
         sys.exit(r.status_code)
     return r.text
 
